@@ -1,0 +1,76 @@
+# KE Health Analytics - Configuration
+
+# Project settings
+project:
+  name: "KE Health Analytics"
+  version: "0.1.0"
+  description: "Predictive Healthcare Intelligence for Kenya"
+
+# Data paths
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  sample_dir: "data/sample"
+
+# Model settings
+models:
+  disease_predictor:
+    type: "random_forest"
+    n_estimators: 100
+    max_depth: 10
+    random_state: 42
+
+  risk_assessment:
+    maternal:
+      risk_thresholds:
+        low: 0.3
+        medium: 0.6
+        high: 1.0
+    chronic:
+      risk_thresholds:
+        low: 0.25
+        medium: 0.5
+        high: 0.75
+
+# Feature engineering settings
+features:
+  disease:
+    age_groups:
+      child: [0, 5]
+      teen: [6, 18]
+      adult: [19, 35]
+      middle_age: [36, 50]
+      senior: [51, 100]
+
+    severity_weights:
+      Malaria: 3
+      Cholera: 4
+      Typhoid: 2
+      Respiratory: 2
+      Other: 1
+
+  weather:
+    malaria_conditions:
+      min_temperature: 25
+      min_humidity: 60
+      min_rainfall: 5
+
+# Visualization settings
+visualization:
+  default_style: "whitegrid"
+  figure_size: [12, 6]
+  dpi: 300
+
+# Alert thresholds
+alerts:
+  outbreak_threshold:
+    percentile: 90
+  warning_threshold:
+    std_multiplier: 1
+  critical_threshold:
+    std_multiplier: 2
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
