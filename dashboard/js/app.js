@@ -8,6 +8,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
     initializeDashboard();
+    initializeTheme();
 });
 
 // Dashboard state
@@ -17,8 +18,43 @@ const dashboardState = {
     selectedRegion: 'all',
     timeRange: 30,
     currentPeriod: 'month',
-    selectedDisease: 'all'
+    selectedDisease: 'all',
+    chartsInitialized: false,
+    lazyLoadComplete: false
 };
+
+// Theme Management
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+}
+
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    updateThemeIcon(theme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+}
+
+function updateThemeIcon(theme) {
+    const lightIcon = document.querySelector('.theme-icon-light');
+    const darkIcon = document.querySelector('.theme-icon-dark');
+
+    if (lightIcon && darkIcon) {
+        lightIcon.style.display = theme === 'light' ? 'block' : 'none';
+        darkIcon.style.display = theme === 'dark' ? 'block' : 'none';
+    }
+}
 
 // Multi-period sample data for dynamic filtering
 const sampleData = {
@@ -115,14 +151,8 @@ function initializeDashboard() {
     // Set dynamic year in footer
     setDynamicYear();
 
-    // Initialize all charts
-    initializeCharts();
-
-    // Update statistics
+    // Update statistics immediately (no charts needed)
     updateStatistics();
-
-    // Load regions
-    loadRegions();
 
     // Setup event listeners
     setupEventListeners();
@@ -130,11 +160,48 @@ function initializeDashboard() {
     // Animate statistics on load
     animateStatistics();
 
-    // Initialize tooltips
-    initializeTooltips();
-
-    // Initialize chatbot
+    // Initialize chatbot (lightweight)
     initializeChatbot();
+
+    // Lazy load charts using Intersection Observer
+    initializeLazyLoading();
+}
+
+// Lazy loading for charts - improves initial page load
+function initializeLazyLoading() {
+    const chartObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !dashboardState.chartsInitialized) {
+                // Initialize charts when first chart comes into view
+                initializeCharts();
+                loadRegions();
+                dashboardState.chartsInitialized = true;
+                dashboardState.lazyLoadComplete = true;
+
+                // Initialize tooltips after charts are ready
+                initializeTooltips();
+
+                // Disconnect observer after initialization
+                chartObserver.disconnect();
+            }
+        });
+    }, {
+        rootMargin: '100px',
+        threshold: 0.1
+    });
+
+    // Observe the charts section
+    const chartsSection = document.querySelector('.charts-section');
+    if (chartsSection) {
+        chartObserver.observe(chartsSection);
+    } else {
+        // Fallback: initialize immediately if section not found
+        initializeCharts();
+        loadRegions();
+        initializeTooltips();
+        dashboardState.chartsInitialized = true;
+        dashboardState.lazyLoadComplete = true;
+    }
 }
 
 // Set dynamic year in footer
@@ -934,14 +1001,77 @@ function setupEventListeners() {
     });
 }
 
-// Export dashboard data
+// Export dashboard data to CSV
 function exportDashboardData() {
-    const dataStr = JSON.stringify(dashboardState.data, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
+    const data = dashboardState.data;
+    const factor = data.timeRangeFactors[dashboardState.timeRange].multiplier;
+    const date = new Date().toISOString().split('T')[0];
+
+    // Build CSV content
+    let csvContent = '';
+
+    // Section 1: Disease Distribution by Region
+    csvContent += 'Disease Distribution by Region\n';
+    csvContent += 'Region,' + data.diseases.join(',') + '\n';
+    data.regions.forEach(region => {
+        const row = [region];
+        data.diseases.forEach(disease => {
+            row.push(Math.round((data.diseaseDistribution[region][disease] || 0) * factor));
+        });
+        csvContent += row.join(',') + '\n';
+    });
+
+    csvContent += '\n';
+
+    // Section 2: Monthly Trends
+    csvContent += 'Monthly Disease Trends\n';
+    csvContent += 'Month,' + data.diseases.slice(0, 4).join(',') + '\n';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    months.forEach((month, i) => {
+        const row = [month];
+        data.diseases.slice(0, 4).forEach(disease => {
+            row.push(data.monthlyData[disease]?.[i] || 0);
+        });
+        csvContent += row.join(',') + '\n';
+    });
+
+    csvContent += '\n';
+
+    // Section 3: Weather Correlation
+    csvContent += 'Weather Correlation Data\n';
+    csvContent += 'Month,Temperature (C),Humidity (%),Cases\n';
+    months.forEach((month, i) => {
+        csvContent += `${month},${data.weatherCorrelation.temperature[i]},${data.weatherCorrelation.humidity[i]},${data.weatherCorrelation.cases[i]}\n`;
+    });
+
+    csvContent += '\n';
+
+    // Section 4: Key Statistics
+    csvContent += 'Key Statistics Summary\n';
+    const totalCases = Math.round(data.monthlyCases.reduce((a, b) => a + b, 0) * factor);
+    csvContent += `Total Cases (${data.timeRangeFactors[dashboardState.timeRange].label}),${totalCases}\n`;
+    csvContent += `Active Outbreaks,${Math.round(3 * factor)}\n`;
+    csvContent += `Regions Covered,${data.regions.length}\n`;
+    csvContent += `Prediction Accuracy,92%\n`;
+
+    csvContent += '\n';
+
+    // Section 5: Regional Summary
+    csvContent += 'Regional Summary\n';
+    csvContent += 'Region,Total Cases,Avg/Month,Status\n';
+    data.regions.forEach(region => {
+        const total = Math.round(Object.values(data.diseaseDistribution[region]).reduce((a, b) => a + b, 0) * factor);
+        const avg = Math.round(total / 12);
+        const status = ['High Risk', 'Medium Risk', 'Low Risk'][Math.floor(Math.random() * 3)];
+        csvContent += `${region},${total},${avg},${status}\n`;
+    });
+
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `ke-health-analytics-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `ke-health-analytics-${date}.csv`;
     link.click();
     URL.revokeObjectURL(url);
 }
