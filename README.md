@@ -12,7 +12,7 @@
 
 <div align="center">
 
-![KE Health Analytics Dashboard](https://raw.githubusercontent.com/OumaCavin/ke-health-analytics/main/dashboard/assets/preview.png)
+![KE Health Analytics Dashboard](screenshots/ke-health-analytics.full.png)
 
 **Modern data science project leveraging machine learning to predict disease outbreaks, patient health risks, and resource optimization for Kenya's healthcare system.**
 
@@ -58,7 +58,7 @@
 
 Experience the interactive healthcare analytics dashboard:
 
-**🔗 [https://ke-health-analytics.vercel.app](https://ke-health-analytics.vercel.app)**
+**:link: [https://ke-health-analytics.vercel.app](https://ke-health-analytics.vercel.app)**
 
 The dashboard includes:
 - Real-time KPI monitoring
@@ -67,6 +67,30 @@ The dashboard includes:
 - Weather-disease correlation analysis
 - Predictive analytics cards
 - Patient risk assessment
+
+---
+
+## Dashboard Features Overview
+
+### Disease Distribution by Region
+
+![Disease Distribution by Region](screenshots/ke-health-analytics.regions.png)
+
+Comprehensive regional health analysis showing disease prevalence across Kenya's counties with interactive filtering capabilities.
+
+### Prediction Analytics
+
+![Prediction Analytics](screenshots/ke-health-analytics.predictions.png)
+
+ML-powered predictions for disease outbreaks, patient risk assessment, and resource optimization with confidence intervals.
+
+### About Health Analytics
+
+![About Health Analytics](screenshots/ke-health-analytics.about.png)
+
+Detailed information about the platform, methodologies, and data sources used in the health analytics system.
+
+---
 
 ## Quick Start
 
@@ -170,6 +194,7 @@ ke-health-analytics/
 │   ├── assets/            # Static assets
 │   ├── index.html         # Main entry point
 │   └── vercel.json        # Vercel configuration
+├── screenshots/            # Dashboard screenshots
 ├── src/                   # Python backend
 │   ├── data/             # Data loading & preprocessing
 │   ├── features/          # Feature engineering
@@ -265,10 +290,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-If you found this project useful, please give it a ⭐️
+If you found this project useful, please give it a :star:
 
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/OumaCavin">Cavin Otieno</a>
+  Made with :heart: by <a href="https://github.com/OumaCavin">Cavin Otieno</a>
 </p>
